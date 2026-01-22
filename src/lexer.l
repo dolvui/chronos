@@ -1,6 +1,7 @@
 /* lexer.l - Chronos lexer */
 
 %option noyywrap
+%option nounput
 
 %{
 #include "parser.tab.hpp"
@@ -22,8 +23,8 @@ ID      [a-zA-Z_][a-zA-Z0-9_-]*
 "undo"          { return UNDO; }
 "jmp"           { return JMP; }
 
-"True"|"1"      { yylval.str = new std::string("True"); return BOOL; }
-"False"|"0"     { yylval.str = new std::string("False"); return BOOL; }
+"True"          { yylval.bval = true; return BOOL; }
+"False"         { yylval.bval = false; return BOOL; }
 
 {DIGIT}+        { yylval.ival = atoi(yytext); return INT; }
 {DIGIT}+"."{DIGIT}+  { yylval.fval = atof(yytext); return FLOAT; }

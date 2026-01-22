@@ -1,8 +1,10 @@
 %code requires {
 #include <string>
 #include <vector>
-}
 
+struct expr_ch;
+struct type_ch;
+}
 
 %{
 #include <iostream>
@@ -10,6 +12,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include "../src/runtime.hpp"
+#include "../src/types/int_ch.hpp"
 using namespace std;
 
 extern Runtime* g_runtime;
@@ -18,24 +21,27 @@ void yyerror(const char* s);
 %}
 
 %union {
-    std::string* str; // VAR, BOOL
-    int          ival; // INT
-    double fval;       // FLOAT
-    std::vector<std::string>* slist;
+    expr_ch* expr;
+    type_ch* value;
+    std::string* str;
+    int ival;
+    double fval;
+    bool bval;
+    std::vector<type_ch*>* tlist;
+    std::vector<std::string>* str_list;
 }
 
 %token <str> VAR
 %token <ival> INT
 %token <fval> FLOAT
-%token <str> BOOL
+%token <bval> BOOL
 
 %token CREATE SAVE CHOOSE RETRO UNDO JMP
 
-/* Declare the type for non-terminal symbols */
-%type <str> expression
-%type <slist> saved_list
-%type <slist> var_list
-%type <slist> optional_var_list
+%type <expr> expression
+%type <str_list> saved_list
+%type <str_list> var_list
+%type <str_list> optional_var_list
 
 %left '+' '-'
 %left '*' '/'
@@ -51,13 +57,40 @@ program:
     ;
 
 statement:
-      CREATE VAR '=' expression ';'   { g_runtime->create_variable(*$2, *$4); delete $2; delete $4; }
-      | SAVE VAR optional_expr ';'    { g_runtime->save_state(*$2); delete $2; }
-      | CHOOSE saved_list ';'         { g_runtime->choose_state(*$2);delete $2; }
-      | RETRO VAR ';'                 { g_runtime->retro(*$2); delete $2; }
-      | UNDO INT optional_var_list ';'{ g_runtime->undo($2, $3);delete $3; }
-      | JMP INT ';' { g_runtime->jump($2); }
-;
+      CREATE VAR '=' expression ';' {
+          type_ch* val = $4->eval(*g_runtime);delete $2;delete $4;delete val;
+      }
+    | SAVE VAR optional_expr ';' {
+          std::cout << "Save state " << *$2 << std::endl;
+          delete $2;
+      }
+    | CHOOSE saved_list ';' {
+          std::cout << "Choose states: ";
+          for (const auto& s : *$2) {
+              std::cout << s << " ";
+          }
+          std::cout << std::endl;
+          delete $2;
+      }
+    | RETRO VAR ';' {
+          std::cout << "Retro to state " << *$2 << std::endl;
+          delete $2;
+      }
+    | UNDO INT optional_var_list ';' {
+          std::cout << "Undo " << $2 << " instructions";
+          if ($3) {
+              std::cout << " for vars: ";
+              for (const auto& v : *$3) {
+                  std::cout << v << " ";
+              }
+              delete $3;
+          }
+          std::cout << std::endl;
+      }
+    | JMP INT ';' {
+          std::cout << "Jump " << $2 << " instructions" << std::endl;
+      }
+    ;
 
 optional_expr:
       /* empty */
@@ -65,8 +98,12 @@ optional_expr:
     ;
 
 expr_list:
-      expression                            { delete $1; }
-    | expr_list ',' expression              { delete $3; }
+      expression {
+          delete $1;
+      }
+    | expr_list ',' expression {
+          delete $3;
+      }
     ;
 
 optional_var_list:
@@ -102,20 +139,40 @@ saved_list:
           $$->push_back(*$3);
           delete $3;
       }
-
-;
+    ;
 
 expression:
-      VAR               { $$ = $1; }
-    | INT               { $$ = new std::string(std::to_string($1)); }
-    | FLOAT             { $$ = new std::string(std::to_string($1)); }
-    | BOOL              { $$ = $1; }
-    | expression '+' expression             { $$ = new std::string(*$1 + "+" + *$3); delete $1; delete $3; }
-    | expression '-' expression             { $$ = new std::string(*$1 + "-" + *$3); delete $1; delete $3; }
-    | expression '*' expression             { $$ = new std::string(*$1 + "*" + *$3); delete $1; delete $3; }
-    | expression '/' expression             { $$ = new std::string(*$1 + "/" + *$3); delete $1; delete $3; }
-    | expression '^' expression             { $$ = new std::string(*$1 + "^" + *$3); delete $1; delete $3; }
-    | '(' expression ')'                    { $$ = $2; }
+      VAR {
+          $$ = new var_expr(*$1);
+          delete $1;
+      }
+    | INT {
+          $$ = new int_literal($1);
+      }
+    | FLOAT {
+          $$ = new float_literal($1);
+      }
+    | BOOL {
+          $$ = new bool_literal($1);
+      }
+    | expression '+' expression {
+          $$ = new add_expr($1, $3);
+      }
+    | expression '-' expression {
+          $$ = new minus_expr($1, $3);
+      }
+    | expression '*' expression {
+          $$ = new times_expr($1, $3);
+      }
+    | expression '/' expression {
+          $$ = new divide_expr($1, $3);
+      }
+    | expression '^' expression {
+          $$ = new power_expr($1, $3);
+      }
+    | '(' expression ')' {
+          $$ = new parenthesis_expr($2);
+      }
     ;
 
 %%
