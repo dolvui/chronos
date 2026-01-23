@@ -34,6 +34,7 @@ int main(int argc, char* argv[]) {
     }
 
     int result = yyparse();
+
     if (result != 0) std::cerr << "Parse errors found\n";
 
     fclose(yyin);

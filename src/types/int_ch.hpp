@@ -1,6 +1,5 @@
 #pragma once
 
-#include <ostream>
 #include "../runtime.hpp"
 
 struct type_ch {
@@ -45,7 +44,7 @@ struct bool_ch : type_ch {
 
 struct expr_ch {
     virtual ~expr_ch() = default;
-    virtual type_ch* eval(Runtime&) const = 0;
+    virtual type_ch *eval(Runtime &) const = 0;
 };
 
 // Literal expressions - wrap values into expressions

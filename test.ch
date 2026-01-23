@@ -1,21 +1,23 @@
-create A = 5;
-create B = 5;
-create C = 5;
-create D = 5;
+create X = 5 + 6;
+create Y = X + 6;
 
+print X;
+print Y;
 
-create M = 6 + 2;
+save STATE1;
 
-save E;
+save STATE2 [A+2];
 
-save F [A+2];
+choose X,Y;
 
-choose E,F;
+retro STATE1;
 
-retro E;
+undo 7;
 
-undo 3;
+undo 2 [A];
 
-undo 3 [D];
+jmp 5;
 
-jmp 4;
+create X = X + Y;
+
+print X;

@@ -22,6 +22,7 @@ ID      [a-zA-Z_][a-zA-Z0-9_-]*
 "retro"         { return RETRO; }
 "undo"          { return UNDO; }
 "jmp"           { return JMP; }
+"print"         { return PRINT; }
 
 "True"          { yylval.bval = true; return BOOL; }
 "False"         { yylval.bval = false; return BOOL; }

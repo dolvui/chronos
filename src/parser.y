@@ -36,7 +36,7 @@ void yyerror(const char* s);
 %token <fval> FLOAT
 %token <bval> BOOL
 
-%token CREATE SAVE CHOOSE RETRO UNDO JMP
+%token CREATE SAVE CHOOSE RETRO UNDO JMP PRINT
 
 %type <expr> expression
 %type <str_list> saved_list
@@ -58,7 +58,9 @@ program:
 
 statement:
       CREATE VAR '=' expression ';' {
-          type_ch* val = $4->eval(*g_runtime);delete $2;delete $4;delete val;
+          type_ch* val = $4->eval(*g_runtime);
+          g_runtime->set(*$2,val);
+          delete $2;delete $4;
       }
     | SAVE VAR optional_expr ';' {
           std::cout << "Save state " << *$2 << std::endl;
@@ -89,7 +91,10 @@ statement:
       }
     | JMP INT ';' {
           std::cout << "Jump " << $2 << " instructions" << std::endl;
-      }
+          }
+    | PRINT VAR ';' {
+      std::cout << g_runtime->get(*$2)->to_string() << "\n" ;delete $2;
+    }
     ;
 
 optional_expr:
