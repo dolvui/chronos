@@ -32,26 +32,29 @@ ___
 
 #### `name` : `regex exp`
 
+```
 `VAR`  : [a-zA-Z_][a-zA-Z0-9-_]*
-
+```
 ___
 
+```
 `BOOL`  : ("True"|"False")|(1|0)
 `INT`   : [0-9]+
 `FLOAT` : [0-9]*\.[0-9]+
 `LIST`  : \[\] | [<TYPES_1> , ... ]
-
+```
 ### Usage
 
+```
 `create` <VAR> = <BOOL> | <INT> | <FLOAT> | <LIST> [,<BOOL> : save state];
-
+```
 
 #### INT
-
+```
 create <VAR> = <INT>;
-
+```
 permitted operation:
-
+```
 <VAR> += <INT>;
 <VAR> -= <INT>;
 <VAR> *= <INT>;
@@ -63,19 +66,19 @@ permitted operation:
 <VAR> *= <VAR>;
 <VAR> /= <VAR>;
 <VAR> ^= <VAR>;
-
+```
 #### FLOAT
 
 same as int
 
 #### BOOL
-
+```
 create <VAR> = 0;
 create <VAR> = 1;
 
 create <VAR> = True;
 create <VAR> = False;
-
+```
 #### LIST
 
 not for now.
@@ -92,14 +95,16 @@ State are checkpoints on the flow of the program that can be influence by specif
 
 ### create a state
 
+```
 save <VAR>;
+```
 
-create a state named <VAR> and store it for future use.
+create a state named `<VAR>` and store it for future use.
 also you can :
-
+```
 save <VAR> [<EXP>,...];
-
-create a state named <VAR> and store it for future use, note that a lists of expression is passed with a list.
+```
+create a state named `<VAR>` and store it for future use, note that a lists of expression is passed with a list.
 thoses expression are apply virtualy to the current state, then store.
 
 ### travel on state
@@ -107,41 +112,62 @@ thoses expression are apply virtualy to the current state, then store.
 suppose we saved 3 states: `state1` , `state2` , `state3`
 
 you can go see each state to tests it;
-
+```
 choose state1 and state2;
-
+```
 or
-
+```
 choose [state1,state2,state3];
-
+```
 ### undo instructions
 
 you can reverse flow for n instructions , and also force value.
-
+```
 undo <INT>;
+```
 or
+```
 undo <INT> [<VAR>,..];
-
+```
 ### retro to a state
 
 you can come back to a state with:
-
+```
 retro <VAR>;
-
+```
 ## code exemple:
 
 ```
-create a = 1;
-create b = 1;
+create X = 5 + 6;
+create Y = X - 6;
 
-save state1 [create d = a ; a+= b;b = c ];
+create Z = Y *8;
+create _test = Z / 6;
+create _test2 = _test ^ 6;
 
-create c = a + b;
-print(c)
+print X;
+print Y;
+print Z;
+print _test;
+print _test2;
 
-retro state1;
 
-create c = a + b;
-print(c)
 
+save STATE1;
+
+save STATE2 [A+2];
+
+choose X,Y;
+
+retro STATE1;
+
+undo 7;
+
+undo 2 [A];
+
+jmp 5;
+
+create X = X + Y;
+
+print X;
 ```
